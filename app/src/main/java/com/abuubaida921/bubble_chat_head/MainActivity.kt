@@ -48,19 +48,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Tell service to hide chat head
-        val intent = Intent("com.abuubaida921.bubble_chat_head.HIDE_CHAT_HEAD")
-        sendBroadcast(intent)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // Tell service to show chat head
-        val intent = Intent("com.abuubaida921.bubble_chat_head.SHOW_CHAT_HEAD")
-        sendBroadcast(intent)
-    }
 
     private fun isServiceRunning(): Boolean {
         // TODO: Implement a check to see if ChatHeadService is running, for now return false
