@@ -6,6 +6,8 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.provider.Settings
 import androidx.appcompat.widget.SwitchCompat
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
 
 
 class MainActivity : AppCompatActivity() {
@@ -22,10 +24,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val prefs = getSharedPreferences("bubble_chat_head_prefs", MODE_PRIVATE)
         val switch = findViewById<SwitchCompat>(R.id.switch_floating_head)
-        switch.isChecked = isServiceRunning()
+        val isEnabled = prefs.getBoolean("show_floating_head", false)
+        switch.isChecked = isEnabled
+        if (isEnabled) {
+            startService(Intent(this, ChatHeadService::class.java))
+        }
 
         switch.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("show_floating_head", isChecked).apply()
             if (isChecked) {
                 if (!Settings.canDrawOverlays(this)) {
                     val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -38,6 +46,20 @@ class MainActivity : AppCompatActivity() {
                 stopService(Intent(this, ChatHeadService::class.java))
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Tell service to hide chat head
+        val intent = Intent("com.abuubaida921.bubble_chat_head.HIDE_CHAT_HEAD")
+        sendBroadcast(intent)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Tell service to show chat head
+        val intent = Intent("com.abuubaida921.bubble_chat_head.SHOW_CHAT_HEAD")
+        sendBroadcast(intent)
     }
 
     private fun isServiceRunning(): Boolean {

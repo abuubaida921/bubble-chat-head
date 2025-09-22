@@ -1,7 +1,10 @@
 package com.abuubaida921.bubble_chat_head
 
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
@@ -14,6 +17,15 @@ import android.widget.ImageView
 class ChatHeadService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var chatHead: ImageView
+
+    private val chatHeadReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                "com.abuubaida921.bubble_chat_head.HIDE_CHAT_HEAD" -> chatHead.visibility = View.GONE
+                "com.abuubaida921.bubble_chat_head.SHOW_CHAT_HEAD" -> chatHead.visibility = View.VISIBLE
+            }
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -81,10 +93,17 @@ class ChatHeadService : Service() {
         })
 
         windowManager.addView(chatHead, params)
+
+        val filter = IntentFilter().apply {
+            addAction("com.abuubaida921.bubble_chat_head.HIDE_CHAT_HEAD")
+            addAction("com.abuubaida921.bubble_chat_head.SHOW_CHAT_HEAD")
+        }
+        registerReceiver(chatHeadReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         if (::chatHead.isInitialized) windowManager.removeView(chatHead)
+        unregisterReceiver(chatHeadReceiver)
     }
 }
