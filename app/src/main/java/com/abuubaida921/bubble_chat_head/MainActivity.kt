@@ -5,7 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.provider.Settings
-import android.widget.Switch
+import androidx.appcompat.widget.SwitchCompat
 
 
 class MainActivity : AppCompatActivity() {
@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val switch = findViewById<Switch>(R.id.switch_floating_head)
+        val switch = findViewById<SwitchCompat>(R.id.switch_floating_head)
         switch.isChecked = isServiceRunning()
 
         switch.setOnCheckedChangeListener { _, isChecked ->
@@ -43,5 +43,10 @@ class MainActivity : AppCompatActivity() {
     private fun isServiceRunning(): Boolean {
         // TODO: Implement a check to see if ChatHeadService is running, for now return false
         return false
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Optionally bring the app to the foreground if needed
     }
 }

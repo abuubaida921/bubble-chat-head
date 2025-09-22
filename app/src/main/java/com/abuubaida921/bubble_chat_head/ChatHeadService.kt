@@ -10,7 +10,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
-import android.widget.Toast
 
 class ChatHeadService : Service() {
     private lateinit var windowManager: WindowManager
@@ -68,7 +67,10 @@ class ChatHeadService : Service() {
                     }
                     MotionEvent.ACTION_UP -> {
                         if (lastAction == MotionEvent.ACTION_DOWN) {
-                            Toast.makeText(this@ChatHeadService, "Chat head clicked!", Toast.LENGTH_SHORT).show()
+                            // Open the app when the chat head is clicked
+                            val intent = Intent(this@ChatHeadService, MainActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
                         }
                         lastAction = event.action
                         return true
