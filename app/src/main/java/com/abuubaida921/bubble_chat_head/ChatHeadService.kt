@@ -58,7 +58,11 @@ class ChatHeadService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-
+        // Check overlay permission before proceeding
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            stopSelf()
+            return
+        }
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         chatHead = ImageView(this).apply {
             setImageResource(R.drawable.ic_chat_head) // your bubble icon

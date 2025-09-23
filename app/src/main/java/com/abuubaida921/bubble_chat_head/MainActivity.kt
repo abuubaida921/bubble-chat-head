@@ -67,7 +67,6 @@ class MainActivity : AppCompatActivity() {
         }
         super.onCreate(savedInstanceState)
         if (isScreenSelection) {
-            window.setBackgroundDrawableResource(android.R.color.transparent)
             setContentView(R.layout.activity_transparent)
         } else {
             setContentView(R.layout.activity_main)
@@ -76,14 +75,16 @@ class MainActivity : AppCompatActivity() {
         if (isScreenSelection) {
             sendBroadcast(Intent("com.abuubaida921.bubble_chat_head.HIDE_CHAT_HEAD"))
         }
-        // Start foreground service for media projection before requesting permission
-        ChatHeadService.startForegroundService(this)
+        // Only start foreground service if overlay permission is granted
+        if (Settings.canDrawOverlays(this)) {
+            ChatHeadService.startForegroundService(this)
+        }
         if (!isScreenSelection) {
             val prefs = getSharedPreferences("bubble_chat_head_prefs", MODE_PRIVATE)
             val switch = findViewById<SwitchCompat>(R.id.switch_floating_head)
             val isEnabled = prefs.getBoolean("show_floating_head", false)
             switch.isChecked = isEnabled
-            if (isEnabled) {
+            if (isEnabled && Settings.canDrawOverlays(this)) {
                 startService(Intent(this, ChatHeadService::class.java))
             }
             switch.setOnCheckedChangeListener { _, isChecked ->
