@@ -61,42 +61,53 @@ class MainActivity : AppCompatActivity() {
     private var mediaProjectionHandler: Handler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val isScreenSelection = intent?.getBooleanExtra("START_SCREEN_SELECTION", false) == true
+        if (isScreenSelection) {
+            setTheme(R.style.Theme_Bubble_Chat_Head_Transparent)
+        }
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        if (isScreenSelection) {
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+            setContentView(R.layout.activity_transparent)
+        } else {
+            setContentView(R.layout.activity_main)
+        }
+        // Hide chat head overlay if launched for screen selection
+        if (isScreenSelection) {
+            sendBroadcast(Intent("com.abuubaida921.bubble_chat_head.HIDE_CHAT_HEAD"))
+        }
         // Start foreground service for media projection before requesting permission
         ChatHeadService.startForegroundService(this)
-
-        val prefs = getSharedPreferences("bubble_chat_head_prefs", MODE_PRIVATE)
-        val switch = findViewById<SwitchCompat>(R.id.switch_floating_head)
-        val isEnabled = prefs.getBoolean("show_floating_head", false)
-        switch.isChecked = isEnabled
-        if (isEnabled) {
-            startService(Intent(this, ChatHeadService::class.java))
-        }
-
-        switch.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("show_floating_head", isChecked).apply()
-            if (isChecked) {
-                if (!Settings.canDrawOverlays(this)) {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName"))
-                    overlayRequestLauncher.launch(intent)
+        if (!isScreenSelection) {
+            val prefs = getSharedPreferences("bubble_chat_head_prefs", MODE_PRIVATE)
+            val switch = findViewById<SwitchCompat>(R.id.switch_floating_head)
+            val isEnabled = prefs.getBoolean("show_floating_head", false)
+            switch.isChecked = isEnabled
+            if (isEnabled) {
+                startService(Intent(this, ChatHeadService::class.java))
+            }
+            switch.setOnCheckedChangeListener { _, isChecked ->
+                prefs.edit().putBoolean("show_floating_head", isChecked).apply()
+                if (isChecked) {
+                    if (!Settings.canDrawOverlays(this)) {
+                        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:$packageName"))
+                        overlayRequestLauncher.launch(intent)
+                    } else {
+                        startService(Intent(this, ChatHeadService::class.java))
+                    }
                 } else {
-                    startService(Intent(this, ChatHeadService::class.java))
+                    stopService(Intent(this, ChatHeadService::class.java))
                 }
-            } else {
-                stopService(Intent(this, ChatHeadService::class.java))
+            }
+            // Add a button or trigger to start screen capture
+            // For demonstration, start on long press of the switch
+            switch.setOnLongClickListener {
+                requestScreenCapturePermission()
+                true
             }
         }
-
-        // Add a button or trigger to start screen capture
-        // For demonstration, start on long press of the switch
-        switch.setOnLongClickListener {
-            requestScreenCapturePermission()
-            true
-        }
-
-        if (intent?.getBooleanExtra("START_SCREEN_SELECTION", false) == true) {
+        if (isScreenSelection) {
             requestScreenCapturePermission()
         }
     }
@@ -189,10 +200,19 @@ class MainActivity : AppCompatActivity() {
             .addOnSuccessListener { visionText ->
                 val extractedText = visionText.text
                 Toast.makeText(this, "Extracted: $extractedText", Toast.LENGTH_LONG).show()
+                // Show chat head again if launched for background selection
+                if (intent?.getBooleanExtra("START_SCREEN_SELECTION", false) == true) {
+                    sendBroadcast(Intent("com.abuubaida921.bubble_chat_head.SHOW_CHAT_HEAD"))
+                    finish()
+                }
                 // TODO: Send extractedText to chat system
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "OCR failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (intent?.getBooleanExtra("START_SCREEN_SELECTION", false) == true) {
+                    sendBroadcast(Intent("com.abuubaida921.bubble_chat_head.SHOW_CHAT_HEAD"))
+                    finish()
+                }
             }
     }
 
